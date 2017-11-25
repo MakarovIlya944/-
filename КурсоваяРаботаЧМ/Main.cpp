@@ -244,13 +244,17 @@ public:
 		{
 			in >> B[i];
 			in >> border[j].r;
-			in >> border[j++].z;
+			in >> border[j].z;
+			border[j].r -= 1;
+			border[j++].z -= 1;
 			in >> border[j].r;
-			in >> border[j++].z;
+			in >> border[j].z;
+			border[j].r -= 1;
+			border[j++].z -= 1;
 		}
 
-		// Добавление краевых исправить
-		for (int i(0), j(0); i < nw; i++)
+		// Добавление краевых работает
+		for (int i(0), j(0); i < nw; i++, j++)
 		{
 			list<int> *iterator = &nvr1;
 
@@ -265,14 +269,21 @@ public:
 
 			if (border[j].r == border[j+1].r)
 			{
-				for(int j(hz[border[j].z]), nj(hz[border[j+1].z]), k(hr[border[j].r]);j<nj;j++)
-					iterator->push_back(j*rNum + k);
+				int l = border[j].z != 0 ? hz[border[j].z-1] : 0;
+				int k = border[j].r != 0 ? hr[border[j].r-1] : 0;
+				int nl(hz[border[++j].z-1]);
+				for(;l<=nl;l++)
+					iterator->push_back(l*rNum + k);
 			}
 			else
 			{
-				for (int j(hr[border[j].r]), nj(hr[border[j + 1].r]), k(hz[border[j].z]); j<nj; j++)
-					iterator->push_back(k*rNum + j);
+				int l = border[j].r != 0 ? hr[border[j].r-1] : 0;
+				int k = border[j].z != 0 ? hz[border[j].z-1] : 0;
+				int nl(hr[border[++j].r-1]);
+				for (; l<=nl; l++)
+					iterator->push_back(k*rNum + l);
 			}
+			iterator->push_back(-1);
 		}
 
 		delete Rh;
