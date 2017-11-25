@@ -45,34 +45,92 @@ class FileGenerator
 {
 public:
 	//FName - название файла с расширением
-	void Save(const string FName)
+	/*bool Save(const string FName)
 	{
-		string type = FName.substr(FName.length() - 3, 3);
-		ofstream out;
-		if (type == "bin")
-		{
-			out = ofstream(FName, ios::binary);
-		}
-		else if (type == "txt")
-		{
+	if (!isReady)
+	return false;
 
-		}
-		else
-		{
+	string type = FName.substr(FName.length() - 3, 3);
+	ofstream out;
+	if (type == "bin")
+	{
+	out = ofstream(FName, ios::binary);
+	}
+	else if (type == "txt")
+	{
+	out = ofstream(FName);
+	out << "Global net\n";
 
-		}
+	for (int z(zNum - 1); z >= 0; z--)
+	{
+	for (int r(0); r < rNum; r++)
+	out << GlobalNet[z*rNum + r].r << '|' << GlobalNet[z*rNum + r].z << ' ';
+	out << endl;
 	}
 
+	out << "NVTR\n";
+	for (int i(0), n = (rNum - 1)*(zNum - 1); i < n; i++)
+	out << nvtr[0][i] << ' ' << nvtr[1][i] << ' ' << nvtr[2][i] << ' ' << nvtr[3][i] << endl;
+
+	out << "NVCAT\n";
+	for (int i(0), n = (rNum - 1)*(zNum - 1), k = 1; i < n; i++)
+	out << i << ' ' << nvcat[i] << endl;
+
+	out << "NVR1\n";
+	int k = 1;
+	for (auto it = nvr1.begin(); it != nvr1.end(); it++)
+	if (*it == -1)
+	k++;
+	else
+	out << *it << ' ' << k << endl;
+
+	out << "NVR2\n";
+	k = 1;
+	for (auto it = nvr2.begin(); it != nvr2.end(); it++)
+	if (*it == -1)
+	k++;
+	else
+	out << *it << ' ' << k << endl;
+
+	out << "NVR3\n";
+	k = 1;
+	for (auto it = nvr3.begin(); it != nvr3.end(); it++)
+	if (*it == -1)
+	k++;
+	else
+	out << *it << ' ' << k << endl;
+	}
+	else
+	return false;
+
+	out.close();
+	return true;
+	};
+	*/
 
 };
 
-/*Структура файла
-
+/*
+===============================================Структура файла net.txt===============================================
+Nr
+r1 r2 r3 ... rNr
+Nz
+z1 z2 z3 ...
+step
+hk1 kr1 hk2 kr2 ... hk(Nr-1) kr(Nr-1)
+hk1 kz1 hk2 kz2 ...
+Nw
+W r_left z_left r_right z_right
+...
+=============================================Структура файла border.txt==============================================
+N
+type NumBorder r_left z_left r_right z_right
+...
 */
 
 class NetGenerator
 {
-public :
+public:
 	//rNum - кол-во узлов по r; zNum - кол-во узлов по z
 	int rNum, zNum;
 	//Общее число узлов
@@ -96,109 +154,148 @@ public :
 	//isReady - готовы ли массивы данных
 	bool isReady = false;
 
-	//FName - путь к файлу
-	bool Save(const string FName)  
+	//FNameN - файл net.txt , FNameB - файл border.txt
+	void Load(const char*FNameN, const char*FNameB)
 	{
-		if (!isReady)
-			return false;
+		//ifstream in(FName, ios::binary);
+		ifstream in(FNameN);
 
-		string type = FName.substr(FName.length() - 3, 3);
-		ofstream out;
-		if (type == "bin")
+		int nr, nz;
+		in >> nr;
+		double *R = new double[nr];
+		for (int i(0); i < nr; i++)
+			in >> R[i];
+
+		in >> nz;
+		double *Z = new double[nz];
+		for (int i(0); i < nz; i++)
+			in >> Z[i];
+
+
+		double step;
+		in >> step;
+		double *kr = new double[nr - 1], *kz = new double[nz - 1];
+		int *hr = new int[nr - 1], nhr(0), *hz = new int[nz - 1], nhz(0);
+		for (int i(0); i < nr - 1; i++)
 		{
-			out = ofstream(FName, ios::binary);
+			in >> hr[i];
+			in >> kr[i];
+			nhr += hr[i];
 		}
-		else if (type == "txt")
+		for (int i(0); i < nz - 1; i++)
 		{
-			out = ofstream(FName);
-			out << "Global net\n";
-
-			for (int z(zNum - 1); z >= 0; z--)
-			{
-				for (int r(0); r < rNum; r++)
-					out << GlobalNet[z*rNum + r].r << '|' << GlobalNet[z*rNum + r].z << ' ';
-				out << endl;
-			}
-
-			out << "NVTR\n";
-			for (int i(0), n = (rNum - 1)*(zNum - 1); i < n; i++)
-				out << nvtr[0][i] << ' ' << nvtr[1][i] << ' ' << nvtr[2][i] << ' ' << nvtr[3][i] << endl;
-
-			out << "NVCAT\n";
-			for (int i(0), n = (rNum - 1)*(zNum - 1), k = 1; i < n; i++)
-				out << i << ' ' << nvcat[i] << endl;
-
-			out << "NVR1\n";
-			int k = 1;
-			for (auto it = nvr1.begin(); it != nvr1.end(); it++)
-				if (*it == -1)
-					k++;
-				else
-					out << *it << ' ' << k << endl;
-
-			out << "NVR2\n";
-			k = 1;
-			for (auto it = nvr2.begin(); it != nvr2.end(); it++)
-				if (*it == -1)
-					k++;
-				else
-					out << *it << ' ' << k << endl;
-
-			out << "NVR3\n";
-			k = 1;
-			for (auto it = nvr3.begin(); it != nvr3.end(); it++)
-				if (*it == -1)
-					k++;
-				else
-					out << *it << ' ' << k << endl;
+			in >> hz[i];
+			in >> kz[i];
+			nhz += hz[i];
 		}
-		else
-			return false;
-		
-		out.close();
-		return true;
-	};
 
-	//FName - путь к файлу
-	void Load(const char*FName)
-	{
-		ifstream in(FName, ios::binary);
+		double *Rh = new double[nhr + 1], *Zh = new double[nhz + 1];
+		for (int i(0), k(0); i < nr - 1; i++)
+		{
+			for (int j(0); j < hr[i]; j++, k++)
+				Rh[k] = R[i] + j*step*kr[i];
+			hr[i] += i != 0 ? hr[i - 1] : 0;
+		}
+		Rh[nhr] = R[nr - 1];
+
+		for (int i(0), k(0); i < nz - 1; i++)
+		{
+			for (int j(0); j < hz[i]; j++, k++)
+				Zh[k] = Z[i] + j*step*kz[i];
+			hz[i] += i != 0 ? hz[i - 1] : 0;
+		}
+		Zh[nhz] = Z[nz - 1];
+
+		delete R;
+		delete Z;
+
+		rNum = nhr + 1;
+		zNum = nhz + 1;
+		Num = rNum*zNum;
+		GlobalNet = new Pointd[Num];
+		for (int i(0); i < zNum; i++)
+			for (int j(0); j < rNum; j++)
+				GlobalNet[i*rNum + j] = Pointd(Rh[j], Zh[i]);
+
+		GenerationNVTR();
+
+		int nw;
+		in >> nw;
+		int *W = new int[nw];
+		Pointi *area = new Pointi[nw * 2]{};
+		for (int i(0), j(0); i < nw; i++)
+		{
+			in >> W[i];
+			in >> area[j].r;
+			in >> area[j++].z;
+			in >> area[j].r;
+			in >> area[j++].z;
+		}
 
 		in.close();
-	}
 
-	//Создает сетку узлов (r,z)
-	//min - левая нижняя точка; max - правая верхняя;
-	//rnum - кол-во отрезков по r; znum - кол-во отрезков по z;
-	bool GenerationGlobalNet(Pointd min, Pointd max, int rnum, int znum)
-	{
-		if (max.r <= min.r || max.z <= min.z || rnum < 1 || znum < 1)
-			return false;
+		in.open(FNameB);
 
-		rNum = rnum + 1;
-		zNum = znum + 1;
-		Num = rNum + zNum;
-
-		double dr = (max.r - min.r) / rnum, dz = (max.z - min.z) / znum;
-		double tmpR = min.r;
-		GlobalNet = new Pointd[rNum*zNum];
-		for (int z(0); z < zNum; z++)
+		int nb;
+		in >> nb;
+		int *B = new int[nb];
+		Pointi *border = new Pointi[nb * 2]{};
+		for (int i(0), j(0); i < nb; i++)
 		{
-			double tmpZ = min.z + z*dz;
-			for (int r(0); r < rNum; r++)
-				GlobalNet[z*rNum + r] = Pointd(tmpR + r*dr, tmpZ);
+			in >> B[i];
+			in >> border[j].r;
+			in >> border[j++].z;
+			in >> border[j].r;
+			in >> border[j++].z;
 		}
+
+		// Добавление краевых исправить
+		for (int i(0), j(0); i < nw; i++)
+		{
+			list<int> *iterator = &nvr1;
+
+			switch (B[i])
+			{
+			case 2:
+				iterator = &nvr2;
+				break;
+			case 3:
+				iterator = &nvr3;
+			}
+
+			if (border[j].r == border[j+1].r)
+			{
+				for(int j(hz[border[j].z]), nj(hz[border[j+1].z]), k(hr[border[j].r]);j<nj;j++)
+					iterator->push_back(j*rNum + k);
+			}
+			else
+			{
+				for (int j(hr[border[j].r]), nj(hr[border[j + 1].r]), k(hz[border[j].z]); j<nj; j++)
+					iterator->push_back(k*rNum + j);
+			}
+		}
+
+		delete Rh;
+		delete Zh;
+		delete hz;
+		delete hr;
+		delete kr;
+		delete kz;
+		delete W;
+		delete border;
+
+		in.close();
 	}
 
 	//Генерирует массив элементов
 	void GenerationNVTR()
 	{
 		int n = (rNum - 1)*(zNum - 1);
-		for(int i(0);i<4;i++)
+		for (int i(0); i<4; i++)
 			nvtr[i] = new int[n];
-		nvcat = new int[n];
+		nvcat = new int[n] {};
 
-		for (int z(0); z < zNum-1; z++)
+		for (int z(0); z < zNum - 1; z++)
 			for (int r(0); r < rNum - 1; r++)
 			{
 				int current = r + z*(rNum - 1), index = r + z*rNum;
@@ -207,7 +304,7 @@ public :
 
 				nvtr[2][current] = index + rNum;
 				nvtr[3][current] = index + rNum + 1;
-				nvcat[current] = 1;
+				//nvcat[current] = 1;
 			}
 	}
 
@@ -218,7 +315,7 @@ public :
 	void AddMaterail(int *elements, int n, int material)
 	{
 		for (int i(0); i < n; i++)
-			nvcat[elements[i]-1] = material;
+			nvcat[elements[i] - 1] = material;
 	}
 
 	//Добавление краевых условий
@@ -276,9 +373,9 @@ public :
 	{
 		cout << "Первые краевые" << endl;
 		copy(nvr1.begin(), nvr1.end(), ostream_iterator<int>(cout, "\n"));
-		cout <<  endl << "Вторые краевые";
+		cout << endl << "Вторые краевые";
 		copy(nvr2.begin(), nvr2.end(), ostream_iterator<int>(cout, "\n"));
-		cout  << endl << "Третьи краевые";
+		cout << endl << "Третьи краевые";
 		copy(nvr3.begin(), nvr3.end(), ostream_iterator<int>(cout, "\n"));
 	}
 };
@@ -287,14 +384,6 @@ void main()
 {
 	setlocale(LC_ALL, "Russian");
 	NetGenerator gen;
-	gen.GenerationGlobalNet({ 0,0 }, { 15,20 }, 5, 4);
-	gen.GenerationNVTR();
-	int elem[6]{ 1,2,3,5,6,7 };
-	gen.AddMaterail(elem, 6, 2);
-	gen.AddBorder(0, 4, 1);
-	gen.AddBorder(0, 5, 2);
-	gen.AddBorder(4, 9, 3);
-	gen.isReady = true;
-	gen.Save("yt.txt");
+	gen.Load("net.txt", "border.txt");
 	int y = 0;
 }
